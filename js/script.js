@@ -17,10 +17,8 @@ const game = {
 
 resetGame();
 
-let isPlayerTurn = true;
-
 async function placeMark(cell) {
-    if (!game.active || !isPlayerTurn) return;
+    if (!game.active || (game.currentPlayer === 'O' && !isPlayerTurn)) return;
 
     const cellIndex = Array.from(cell.parentNode.children).indexOf(cell);
     if (game.board[cellIndex] !== '') return;
@@ -32,9 +30,12 @@ async function placeMark(cell) {
     checkWinner();
     togglePlayer();
     await animateCell(cell);
-    isPlayerTurn = true;
 
-    makeComputerMove();
+    if (game.currentPlayer === 'O' && game.active) {
+        makeComputerMove();
+    }
+
+    isPlayerTurn = true;
 }
 
 function animateCell(cell) {
@@ -61,11 +62,40 @@ async function makeComputerMove() {
         const cell = document.querySelector(`.cell:nth-child(${bestMove + 1})`);
 
         await animateCell(cell);
-        await sleep(1000);
         placeMark(cell);
         checkWinner();
     }
 }
+
+function animateCell(cell) {
+    return new Promise(resolve => {
+        cell.style.transition = 'background-color 0.3s';
+        cell.style.backgroundColor = getRandomColor();
+
+        requestAnimationFrame(() => {
+            cell.classList.add('cell-played');
+
+            cell.addEventListener('transitionend', function transitionEnd() {
+                cell.removeEventListener('transitionend', transitionEnd);
+                cell.classList.remove('cell-played');
+                cell.style.transition = '';
+                resolve();
+            });
+        });
+    });
+}
+
+async function makeComputerMove() {
+    if (game.currentPlayer === 'O' && game.active) {
+        const bestMove = getBestMove();
+        const cell = document.querySelector(`.cell:nth-child(${bestMove + 1})`);
+
+        await animateCell(cell);
+        placeMark(cell);
+        checkWinner();
+    }
+}
+
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -141,9 +171,8 @@ function resetGame() {
         cells[i].classList.remove('cell-winner');
     }
 
-    updateStatusMessage();  // Adicione esta linha para atualizar a mensagem de status
+    updateStatusMessage();
 }
-
 
 function getRandomColor() {
     const vibrantColors = [
