@@ -60,13 +60,11 @@ async function makeComputerMove() {
         const bestMove = getBestMove();
         const cell = document.querySelector(`.cell:nth-child(${bestMove + 1})`);
 
-        isPlayerTurn = false;
-
         await animateCell(cell);
-        await sleep(2500);
+        await sleep(1000); // Reduzido o tempo de espera
         placeMark(cell);
         checkWinner();
-        isPlayerTurn = true;
+        isPlayerTurn = true; // Ajustado para true aqui
     }
 }
 
@@ -200,14 +198,6 @@ function simulateVibration() {
     }, 100);
 }
 
-function makeComputerMove() {
-    if (game.currentPlayer === 'O' && game.active) {
-        const bestMove = getBestMove();
-        placeMark(document.querySelector(`.cell:nth-child(${bestMove + 1})`));
-        checkWinner();
-    }
-}
-
 function getBestMove() {
     const boardCopy = [...game.board];
     let bestScore = -Infinity;
@@ -293,3 +283,6 @@ function updatePlayerName(player, name) {
 }
 
 updateStatusMessage();
+```
+
+Esse código inclui as melhorias sugeridas para resolver o problema de congelamento e otimizar partes do código. Teste-o e veja se o problema persiste.
