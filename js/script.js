@@ -1,93 +1,83 @@
 // @juniordelonge
-let playerXName = 'Player X';
-let playerOName = 'Player O';
-let isPlayerTurn = true; 
+const icons = ['<i class="fas fa-times"></i>', '<i class="fas fa-circle"></i>'];
+const board = document.getElementById('board');
+const cells = [];
+const messageDiv = document.getElementById('message');
+let currentPlayer = 0;
+let gameBoard = ['', '', '', '', '', '', '', '', ''];
+let wins = 0;
+let losses = 0;
+let draws = 0;
 
-if (playerXName.trim() === '' || playerOName.trim() === '') {
-    console.error('Nomes de jogadores não podem estar vazios.');
+function createCell(index) {
+    const cell = document.createElement('div');
+    cell.classList.add('cell');
+    cell.dataset.index = index;
+    cell.addEventListener('click', () => makeMove(index));
+    board.appendChild(cell);
+    cells.push(cell);
+    setRandomBackgroundColor(cell);
 }
 
-const game = {
-    board: ['', '', '', '', '', '', '', '', ''],
-    active: true,
-    currentPlayer: 'X',
-    playerXScore: 0,
-    playerOScore: 0,
-    drawScore: 0,
-};
-
-resetGame();
-
-async function placeMark(cell) {
-    if (!game.active || (game.currentPlayer === 'O' && !isPlayerTurn)) return;
-
-    const cellIndex = Array.from(cell.parentNode.children).indexOf(cell);
-    if (game.board[cellIndex] !== '') return;
-
-    isPlayerTurn = false;
-
-    game.board[cellIndex] = game.currentPlayer;
-    cell.innerHTML = game.currentPlayer === 'X' ? '<i class="fas fa-times"></i>' : '<i class="fas fa-circle"></i>';
-    checkWinner();
-    togglePlayer();
-    await animateCell(cell);
-
-    if (game.currentPlayer === 'O' && game.active) {
-        makeComputerMove();
-    }
-
-    isPlayerTurn = true;
+function setRandomBackgroundColor(element) {
+    const vibrantColor = getRandomVibrantColor();
+    element.style.backgroundColor = vibrantColor;
 }
 
-function animateCell(cell) {
-    return new Promise(resolve => {
-        cell.style.transition = 'background-color 0.3s';
-        cell.style.backgroundColor = getRandomColor();
-
-        requestAnimationFrame(() => {
-            cell.classList.add('cell-played');
-
-            cell.addEventListener('transitionend', function transitionEnd() {
-                cell.removeEventListener('transitionend', transitionEnd);
-                cell.classList.remove('cell-played');
-                cell.style.transition = '';
-                resolve();
-            });
-        });
+function resetBoard() {
+    gameBoard = ['', '', '', '', '', '', '', '', ''];
+    cells.forEach(cell => {
+        cell.innerHTML = '';
+        cell.classList.remove('win-cell', 'clicked');
+        cell.style.pointerEvents = 'auto';
+        setRandomBackgroundColor(cell);
     });
+    messageDiv.innerHTML = '';
+    currentPlayer = 0;
 }
 
-async function makeComputerMove() {
-    if (game.currentPlayer === 'O' && game.active) {
-        const bestMove = getBestMove();
-        const cell = document.querySelector(`.cell:nth-child(${bestMove + 1})`);
+function makeMove(index) {
+    if (gameBoard[index] === '' && !checkWinner()) {
+        const icon = currentPlayer === 0 ? icons[0] : icons[1];
+        cells[index].innerHTML = icon;
+        cells[index].classList.add('clicked');
+        setRandomBackgroundColor(cells[index]);
+        gameBoard[index] = icon;
 
-        await animateCell(cell);
-        placeMark(cell);
-        checkWinner();
+        if (checkWinner()) {
+            if (currentPlayer === 0) {
+                messageDiv.innerHTML = `<i class="fas fa-trophy"></i> Player ${icon} venceu!`;
+                wins++;
+            } else {
+                messageDiv.innerHTML = '<i class="fas fa-robot"></i> Computador venceu!';
+                losses++;
+            }
+            highlightWinningCells();
+            updateScore();
+            setTimeout(resetBoard, 2000);
+            return;
+        }
+
+        if (gameBoard.indexOf('') === -1) {
+            messageDiv.innerHTML = 'Empate! <i class="fas fa-handshake"></i>';
+            draws++;
+            updateScore();
+            setTimeout(resetBoard, 2000);
+            return;
+        }
+
+        currentPlayer = 1 - currentPlayer;
+
+        if (currentPlayer === 1) {
+            setTimeout(makeComputerMove, 500);
+        }
     }
 }
 
-document.cookie = "playerXName=" + encodeURIComponent(playerXName) + "; SameSite=None; Secure";
-document.cookie = "playerOName=" + encodeURIComponent(playerOName) + "; SameSite=None; Secure";
-document.cookie = "seuCookie=seuValor; SameSite=None; Secure";
-document.cookie = "seuCookie=seuValor; SameSite=Lax";
-
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function togglePlayer() {
-    game.currentPlayer = game.currentPlayer === 'X' ? 'O' : 'X';
-    updateStatusMessage();
-}
-
-function updateStatusMessage() {
-    document.getElementById('status-message').textContent = `Vez de ${getCurrentPlayerName()}`;
-}
-
-function getCurrentPlayerName() {
-    return game.currentPlayer === 'X' ? playerXName : playerOName;
+function makeComputerMove() {
+    const emptyCells = gameBoard.reduce((acc, val, index) => (val === '' ? acc.concat(index) : acc), []);
+    const randomIndex = Math.floor(Math.random() * emptyCells.length);
+    makeMove(emptyCells[randomIndex]);
 }
 
 function checkWinner() {
@@ -97,198 +87,38 @@ function checkWinner() {
         [0, 4, 8], [2, 4, 6]
     ];
 
-    for (let pattern of winPatterns) {
+    for (const pattern of winPatterns) {
         const [a, b, c] = pattern;
-        if (game.board[a] !== '' && game.board[a] === game.board[b] && game.board[a] === game.board[c]) {
-            endGame(`Jogador ${game.currentPlayer} venceu!`, pattern);
-            return;
+        if (gameBoard[a] !== '' && gameBoard[a] === gameBoard[b] && gameBoard[a] === gameBoard[c]) {
+            return pattern;
         }
-    }
-
-    if (!game.board.includes('') && game.active) {
-        endGame('Empate! O jogo terminou.', null);
-    }
-}
-
-function endGame(message, winningCells) {
-    game.active = false;
-    document.getElementById('status-message').textContent = message;
-    if (winningCells) highlightWinnerCells(winningCells);
-    updateScore(game.currentPlayer === 'X' ? 'X' : 'O');
-    showNotification(message);
-    vibrateScreen();
-    if (!winningCells) shakePanel();
-}
-
-function highlightWinnerCells(cells) {
-    cells.forEach(index => {
-        const cellElement = document.querySelector(`.cell:nth-child(${index + 1})`);
-        cellElement.style.backgroundColor = '#c0ffd1';
-        cellElement.classList.add('cell-winner');
-    });
-}
-
-function updateScore(winner) {
-    const scoreKey = winner === 'X' ? 'playerXScore' : winner === 'O' ? 'playerOScore' : 'drawScore';
-    game[scoreKey]++;
-    document.getElementById(`${winner === 'draw' ? 'draw' : 'player' + winner.toUpperCase() + 'Score'}`).textContent = game[scoreKey];
-}
-
-function resetGame() {
-    game.board = ['', '', '', '', '', '', '', '', ''];
-    game.active = true;
-    game.currentPlayer = 'X';
-
-    const cells = document.getElementById('game-board').children;
-    const randomColor = getRandomColor();
-
-    for (let i = 0; i < cells.length; i++) {
-        cells[i].textContent = '';
-        cells[i].style.backgroundColor = randomColor;
-        cells[i].classList.remove('cell-winner');
-    }
-
-    updateStatusMessage();
-}
-
-function getRandomColor() {
-    const vibrantColors = [
-        '#FF5733', '#FFBD33', '#33FF57', '#339FFF', '#FF33A1', '#A133FF',
-        '#FF3333', '#33FFC1', '#FF336B', '#E633FF', '#33FFEC', '#FF9333'
-    ];
-    return vibrantColors[Math.floor(Math.random() * vibrantColors.length)];
-}
-
-function showNotification(message) {
-    const notification = document.createElement('div');
-    notification.className = 'notification';
-    notification.textContent = message;
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
-}
-
-function shakePanel() {
-    const panel = document.getElementById('game-board');
-    panel.classList.add('shake');
-
-    panel.addEventListener('animationend', function () {
-        panel.classList.remove('shake');
-    });
-}
-
-function vibrateScreen() {
-    try {
-        navigator.vibrate = navigator.vibrate || navigator.webkitVibrate || navigator.mozVibrate || navigator.msVibrate;
-        if (navigator.vibrate) {
-            navigator.vibrate([500]);
-            console.log('Vibrando...');
-        } else {
-            simulateVibration();
-        }
-    } catch (error) {
-        console.error('Erro ao tentar vibrar:', error);
-    }
-}
-
-function simulateVibration() {
-    const body = document.body;
-    const originalBackgroundColor = body.style.backgroundColor;
-    body.style.transition = 'background-color 0.1s';
-
-    body.style.backgroundColor = '#fff';
-    setTimeout(() => {
-        body.style.backgroundColor = originalBackgroundColor;
-    }, 100);
-}
-
-function getBestMove() {
-    const boardCopy = [...game.board];
-    let bestScore = -Infinity;
-    let bestMove;
-
-    for (let i = 0; i < boardCopy.length; i++) {
-        if (boardCopy[i] === '') {
-            boardCopy[i] = 'O';
-            let score = minimax(boardCopy, 0, false);
-            boardCopy[i] = '';
-
-            if (score > bestScore) {
-                bestScore = score;
-                bestMove = i;
-            }
-        }
-    }
-
-    return bestMove;
-}
-
-function minimax(board, depth, isMaximizing) {
-    const result = evaluate(board);
-
-    if (result !== null) {
-        return result;
-    }
-
-    if (isMaximizing) {
-        let bestScore = -Infinity;
-        for (let i = 0; i < board.length; i++) {
-            if (board[i] === '') {
-                board[i] = 'O';
-                let score = minimax(board, depth + 1, false);
-                board[i] = '';
-                bestScore = Math.max(score, bestScore);
-            }
-        }
-        return bestScore;
-    } else {
-        let bestScore = Infinity;
-        for (let i = 0; i < board.length; i++) {
-            if (board[i] === '') {
-                board[i] = 'X';
-                let score = minimax(board, depth + 1, true);
-                board[i] = '';
-                bestScore = Math.min(score, bestScore);
-            }
-        }
-        return bestScore;
-    }
-}
-
-function evaluate(board) {
-    const winPatterns = [
-        [0, 1, 2], [3, 4, 5], [6, 7, 8],
-        [0, 3, 6], [1, 4, 7], [2, 5, 8],
-        [0, 4, 8], [2, 4, 6]
-    ];
-
-    for (let pattern of winPatterns) {
-        const [a, b, c] = pattern;
-        if (board[a] !== '' && board[a] === board[b] && board[a] === board[c]) {
-            return board[a] === 'O' ? 10 : -10;
-        }
-    }
-
-    if (!board.includes('')) {
-        return 0;
     }
 
     return null;
 }
 
-function updatePlayerName(player, name) {
-    if (player === 'X') {
-        playerXName = name;
-    } else if (player === 'O') {
-        playerOName = name;
-    }
-    document.getElementById(`player${player}Name`).textContent = name;
-    updateStatusMessage();
+function updateScore() {
+    document.getElementById('wins').textContent = wins;
+    document.getElementById('losses').textContent = losses;
+    document.getElementById('draws').textContent = draws;
 }
 
-updateStatusMessage();
+function highlightWinningCells() {
+    const winningCells = checkWinner();
+    if (winningCells) {
+        for (const index of winningCells) {
+            cells[index].classList.add('win-cell');
+        }
+    }
+}
 
-const userAgentData = navigator.userAgentData;
-console.log(userAgentData.brands); // Informações sobre o navegador
+function getRandomVibrantColor() {
+    const vibrantColors = ['#FF5733', '#FFBD33', '#33FF57', '#339FFF', '#FF33A1', '#A133FF',
+        '#FF3333', '#33FFC1', '#FF336B', '#E633FF', '#33FFEC', '#69f50c'];
+
+    return vibrantColors[Math.floor(Math.random() * vibrantColors.length)];
+}
+
+for (let i = 0; i < 9; i++) {
+    createCell(i);
+}
