@@ -61,10 +61,9 @@ async function makeComputerMove() {
         const cell = document.querySelector(`.cell:nth-child(${bestMove + 1})`);
 
         await animateCell(cell);
-        await sleep(1000); // Reduzido o tempo de espera
+        await sleep(1000);
         placeMark(cell);
         checkWinner();
-        isPlayerTurn = true; // Ajustado para true aqui
     }
 }
 
@@ -142,8 +141,9 @@ function resetGame() {
         cells[i].classList.remove('cell-winner');
     }
 
-    updateStatusMessage();
+    updateStatusMessage();  // Adicione esta linha para atualizar a mensagem de status
 }
+
 
 function getRandomColor() {
     const vibrantColors = [
