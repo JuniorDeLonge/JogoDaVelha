@@ -283,6 +283,3 @@ function updatePlayerName(player, name) {
 }
 
 updateStatusMessage();
-```
-
-Esse código inclui as melhorias sugeridas para resolver o problema de congelamento e otimizar partes do código. Teste-o e veja se o problema persiste.
