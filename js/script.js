@@ -1,6 +1,7 @@
 // @juniordelonge
 let playerXName = 'Player X';
 let playerOName = 'Player O';
+let isPlayerTurn = true; 
 
 if (playerXName.trim() === '' || playerOName.trim() === '') {
     console.error('Nomes de jogadores não podem estar vazios.');
@@ -67,35 +68,10 @@ async function makeComputerMove() {
     }
 }
 
-function animateCell(cell) {
-    return new Promise(resolve => {
-        cell.style.transition = 'background-color 0.3s';
-        cell.style.backgroundColor = getRandomColor();
-
-        requestAnimationFrame(() => {
-            cell.classList.add('cell-played');
-
-            cell.addEventListener('transitionend', function transitionEnd() {
-                cell.removeEventListener('transitionend', transitionEnd);
-                cell.classList.remove('cell-played');
-                cell.style.transition = '';
-                resolve();
-            });
-        });
-    });
-}
-
-async function makeComputerMove() {
-    if (game.currentPlayer === 'O' && game.active) {
-        const bestMove = getBestMove();
-        const cell = document.querySelector(`.cell:nth-child(${bestMove + 1})`);
-
-        await animateCell(cell);
-        placeMark(cell);
-        checkWinner();
-    }
-}
-
+document.cookie = "playerXName=" + encodeURIComponent(playerXName) + "; SameSite=None; Secure";
+document.cookie = "playerOName=" + encodeURIComponent(playerOName) + "; SameSite=None; Secure";
+document.cookie = "seuCookie=seuValor; SameSite=None; Secure";
+document.cookie = "seuCookie=seuValor; SameSite=Lax";
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -164,10 +140,11 @@ function resetGame() {
     game.currentPlayer = 'X';
 
     const cells = document.getElementById('game-board').children;
+    const randomColor = getRandomColor();
 
     for (let i = 0; i < cells.length; i++) {
         cells[i].textContent = '';
-        cells[i].style.backgroundColor = getRandomColor();
+        cells[i].style.backgroundColor = randomColor;
         cells[i].classList.remove('cell-winner');
     }
 
@@ -312,3 +289,6 @@ function updatePlayerName(player, name) {
 }
 
 updateStatusMessage();
+
+const userAgentData = navigator.userAgentData;
+console.log(userAgentData.brands); // Informações sobre o navegador
