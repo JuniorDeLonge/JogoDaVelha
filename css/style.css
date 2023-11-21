@@ -1,0 +1,128 @@
+/* @juniordelonge */
+body {
+    font-family: 'Quicksand', sans-serif;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #161515;
+}
+
+#game-board {
+    display: grid;
+    grid-template-columns: repeat(3, 100px);
+    gap: 5px;
+    max-width: 300px;
+    margin: 20px auto;
+    background-color: #161515; 
+}
+
+.cell {
+    width: 100px;
+    height: 100px;
+    border: 2px solid #000;
+    font-size: 3em;
+    text-align: center;
+    line-height: 100px;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+    background-color: #fff; 
+}
+
+.cell:hover {
+    background-color: #f0f0f0;
+}
+
+.cell-winner {
+    background-color: #c0ffd1 !important; 
+}
+
+.cell-played {
+    animation: rotateIn 0.5s ease-in-out, changeColor 0.5s ease-in-out;
+}
+
+#status-message {
+    text-align: center;
+    font-size: 1.5em;
+    margin-top: 20px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+#score-board {
+    text-align: center;
+    font-size: 1.2em;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.score {
+    color: #555;
+    margin-bottom: 5px;
+}
+
+#playerXScore, #playerOScore, #drawScore {
+    color: #e44d26; 
+}
+
+button {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+    background-color: #e44d26; 
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease-in-out;
+}
+
+button:hover {
+    background-color: #d13d20;
+}
+
+.shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25%, 75% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+}
+
+.notification {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #e44d26;
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    z-index: 999;
+}
+
+.player-names {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+label {
+    color: #e44d26;
+    display: block;
+    margin-top: 10px;
+}
+
+input {
+    padding: 5px;
+    margin-bottom: 10px;
+    border: 1px solid #e44d26;
+    border-radius: 3px;
+}
